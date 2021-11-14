@@ -29,7 +29,7 @@ class DiscordBotCommands(commands.Cog):
         """
         print(f'{self.bot.user.name} has connected to Discord server version: {__version__}')
         bot_channel = self.bot.get_channel(get_bot_control_channel())
-        await bot_channel.send(f'{self.bot.user.name} has connected to Discord server Booze bot version: {__version__}')
+        await bot_channel.send(f'{self.bot.user.name} has connected to Discord server version: {__version__}')
 
     @commands.Cog.listener()
     async def on_disconnect(self):
@@ -44,7 +44,7 @@ class DiscordBotCommands(commands.Cog):
         :param discord.Context ctx: The Discord context object
         :returns: None
         """
-        await ctx.send(f"**Avast Ye Landlubber! {self.bot.user.name} is here!**")
+        await ctx.send(f"**{self.bot.user.name} is here!**")
 
     # quit the bot
     @commands.command(name='exit', help="Stops the bots process on the VM, ending all functions.")
@@ -100,7 +100,7 @@ class DiscordBotCommands(commands.Cog):
         :returns: None
         """
         print(f'User {ctx.author} requested the version: {__version__}.')
-        await ctx.send(f"Avast Ye Landlubber! {self.bot.user.name} is on version: {__version__}.")
+        await ctx.send(f"{self.bot.user.name} is on version: {__version__}.")
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
