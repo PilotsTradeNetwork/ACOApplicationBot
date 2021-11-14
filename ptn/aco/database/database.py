@@ -84,3 +84,21 @@ def build_database_on_startup():
         print('Forms Database created')
     else:
         print('The tracking forms database already exists')
+
+    print('Checking whether the the member tracking database exists')
+    affiliator_db.execute(
+        '''SELECT count(name) FROM sqlite_master WHERE TYPE = 'table' AND name = 'membertracking' '''
+    )
+    if not bool(affiliator_db.fetchone()[0]):
+        print('Creating a fresh membertracking database')
+        affiliator_db.execute('''
+                CREATE TABLE membertracking(
+                    entry INTEGER PRIMARY KEY AUTOINCREMENT,
+                    discord_username TEXT UNIQUE,
+                    date DATETIME
+                ) 
+            ''')
+        affiliator_conn.commit()
+        print('Member tracking database created')
+    else:
+        print('The member tracking table already exists')
