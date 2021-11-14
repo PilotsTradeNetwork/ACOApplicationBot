@@ -13,7 +13,7 @@ class Helper(commands.Cog):
     """
 
     @cog_ext.cog_slash(
-        name='pirate_steve_help',
+        name='affiliiate_bot_help',
         guild_ids=[bot_guild_id()],
         description='Returns some information for each command.',
         options=[
