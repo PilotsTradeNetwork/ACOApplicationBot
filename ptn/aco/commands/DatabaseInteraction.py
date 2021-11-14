@@ -1,8 +1,10 @@
+import traceback
 from datetime import datetime
 import os.path
 
 import discord
 from discord import NotFound, HTTPException
+from discord.ext import tasks, commands
 from discord_slash import cog_ext, SlashContext
 from discord_slash.model import SlashCommandPermissionType
 from discord_slash.utils.manage_commands import create_permission, create_option
@@ -21,6 +23,33 @@ class InvalidUser(Exception):
 
 
 class DatabaseInteraction(Cog):
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print('Starting the polling task')
+        await self.timed_scan.start()
+
+    @tasks.loop(minutes=5)
+    async def timed_scan(self):
+        print(f'Automatic database polling started at {datetime.now()}')
+        self.running_scan = True
+        await self._update_db()
+        self.running_scan = False
+        print('Automatic database scan completed, next scan in 2 hours')
+
+    @timed_scan.after_loop
+    async def timed_scan_after_loop(self):
+        self.running_scan = False
+        if self.timed_scan.failed():
+            print("timed_scan after_loop().Task has failed.")
+
+    @timed_scan.error
+    async def timed_scan_error(self, error):
+        self.running_scan = False
+        if not self.timed_scan.is_running() or self.timed_scan.failed():
+            print("timed_scan error(). task has failed.")
+        print(error)
+        traceback.print_exc()
 
     def __init__(self):
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -45,7 +74,7 @@ class DatabaseInteraction(Cog):
         self.worksheet_with_data_id = forms['worksheet_with_data_id']
 
         print(f'Building worksheet with the key: {self.worksheet_key}')
-
+        self.running_scan = False
         try:
             workbook = self.client.open_by_key(self.worksheet_key)
             print(workbook)
@@ -93,19 +122,22 @@ class DatabaseInteraction(Cog):
         :rtype: None
         """
         print(f'User {ctx.author} requested to re-populate the database at {datetime.now()}')
+        if self.running_scan:
+            return await ctx.send('DB scan is already in progress.')
 
         try:
             result = await self._update_db()
+            msg = 'Check the ACO application channel for new applications' if result['added_count'] > 0 \
+                else 'No new applications found'
             embed = discord.Embed(title="ACO DB Update ran successfully.")
-            embed.add_field(name='SOMETHING HAPPENED',
-                            value='YEP',
-                            inline=False)
+            embed.add_field(name='Scan completed', value=msg, inline=False)
 
             return await ctx.send(embed=embed)
 
         except ValueError as ex:
             return await ctx.send(str(ex))
 
+    @tasks.loop(minutes=3)
     async def _update_db(self):
         """
         Private method to wrap the DB update commands.
