@@ -242,7 +242,7 @@ class DatabaseInteraction(Cog):
                 except (InvalidUser, NotFound, HTTPException) as ex:
                     print(f'Unable to member status for user {user.discord_username}: {ex}')
                     member = 'Unknown.'
-                    reason = 'Unable to determine membership'
+                    reason = 'Unable to determine membership\n'
 
                 embed = discord.Embed(
                     title='New ACO application detected.',
