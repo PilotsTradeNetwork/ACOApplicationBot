@@ -1,8 +1,9 @@
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 import os.path
 
 import discord
+from dateutil import parser
 from discord import NotFound, HTTPException
 from discord.ext import tasks, commands
 from discord_slash import cog_ext, SlashContext
@@ -199,6 +200,9 @@ class DatabaseInteraction(Cog):
                 finally:
                     affiliator_lock.release()
 
+                reason = ""
+                eligible_for_aco = False
+
                 try:
                     dc_user = bot_guild.get_member_named(user.discord_username)
                     if not dc_user:
@@ -210,17 +214,45 @@ class DatabaseInteraction(Cog):
                     member_role = discord.utils.find(lambda r: r.name == 'Member', bot_guild.roles)
                     print(member_role)
                     member = member_role in dc_user.roles
+
+                    if member:
+                        print(f'User {dc_user} has the member role.')
+                        # We have the role, go check member since when
+                        try:
+                            affiliator_db.execute(
+                                "SELECT * FROM membertracking WHERE discord_username LIKE (?)", (f'%{dc_user}%',)
+                            )
+                            member_tracking_since = dict(affiliator_db.fetchone())
+                            print(f'User data: {user}')
+                            now = datetime.now()
+                            role_since = parser.parse(member_tracking_since['date'])
+
+                            time_with_role = now - role_since
+                            if time_with_role.days >= 14:
+                                eligible_for_aco = True
+                            else:
+                                eligible_from = role_since + timedelta(days=14)
+                                eligible_for_aco = False
+                                reason = f'**Reason:** User member for: {time_with_role.days} days. ' \
+                                         f'Eligible from: {eligible_from.strftime("%Y-%m-%d %H:%M:%S")}.\n'
+                        except TypeError as ex:
+                            print('Error when converting the membertracking object to a dict - is the user present?')
+                            print(ex)
+
                 except (InvalidUser, NotFound, HTTPException) as ex:
                     print(f'Unable to member status for user {user.discord_username}: {ex}')
-                    member = 'Unclear'
+                    member = 'Unknown.'
+                    reason = 'Unable to determine membership'
 
                 embed = discord.Embed(
                     title='New ACO application detected.',
-                    description=f'**User:** {user.ptn_nickname} \n'
+                    description=f'**User:** {user.ptn_nickname}\n'
                                 f'**Discord Username:** {user.discord_username}\n'
                                 f'**Cmdr Name:** {user.cmdr_name}\n'
                                 f'**Fleet Carrier:** {user.fleet_carrier_name} ({user.fleet_carrier_id})\n'
                                 f'**Has member role:** {member}.\n'
+                                f'**Eligible for ACO:** {eligible_for_aco}\n'
+                                f'{reason}'
                                 f'**Applied At:** {user.timestamp}'
                 )
                 embed.set_footer(text='Please validate membership and vote on this proposal')

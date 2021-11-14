@@ -13,7 +13,7 @@ class Helper(commands.Cog):
     """
 
     @cog_ext.cog_slash(
-        name='pirate_steve_help',
+        name='affiliiate_bot_help',
         guild_ids=[bot_guild_id()],
         description='Returns some information for each command.',
         options=[
@@ -23,7 +23,18 @@ class Helper(commands.Cog):
                 option_type=3,
                 required=True,
                 choices=[
-
+                    create_choice(
+                        name='scan_aco_applications',
+                        value='scan_aco_applications'
+                    ),
+                    create_choice(
+                        name='find_user',
+                        value='find_user'
+                    ),
+                    create_choice(
+                        name='grant_affiliate_status',
+                        value='grant_affiliate_status'
+                    ),
                 ]
             ),
         ]
@@ -38,12 +49,30 @@ class Helper(commands.Cog):
         """
         print(f'User {ctx.author} has requested help for command: {command}')
         # For each value we just populate some data.
-        if command == '':
-            # TODO: Fill me out
-            params = {}
-            method_desc = ''
-            roles = []
-            pass
+        if command == 'grant_affiliate_status':
+            params = [
+                {
+                    'name': 'user',
+                    'type': 'string',
+                    'description': 'The user to grant the role too.'
+                }
+            ]
+            method_desc = 'Grants or removes the ACO role to the provided user'
+            roles = ['Admin', 'Mod']
+        elif command == 'scan_aco_applications':
+            params = None
+            method_desc = 'Starts a manual scan for new applications. Triggers automatically every 24 hours.'
+            roles = ['Admin', 'Mod']
+        elif command == 'find_user':
+            params = [
+                {
+                    'name': 'user',
+                    'type': 'string',
+                    'description': 'The user to look for. Case sensitive matching.'
+                }
+            ]
+            method_desc = 'Searches the roles for a user'
+            roles = ['Admin', 'Mod']
         else:
             print('User did not provide a valid command.')
             return await ctx.send(f'Unknown handling for command: {command}.')
