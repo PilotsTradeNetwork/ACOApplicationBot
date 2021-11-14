@@ -29,7 +29,7 @@ class DatabaseInteraction(Cog):
         print('Starting the polling task')
         await self.timed_scan.start()
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(hours=24)
     async def timed_scan(self):
         print(f'Automatic database polling started at {datetime.now()}')
         self.running_scan = True
