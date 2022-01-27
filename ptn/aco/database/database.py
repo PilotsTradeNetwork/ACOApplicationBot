@@ -47,10 +47,11 @@ def build_database_on_startup():
                     ptn_nickname TEXT NOT NULL,
                     cmdr_name TEXT NOT NULL,
                     fleet_carrier_name TEXT NOT NULL,
-                    fleet_carrier_id TEXT NOT NULL UNIQUE,
+                    fleet_carrier_id TEXT NOT NULL,
                     ack BOOLEAN,
                     user_claims_member BOOLEAN,
-                    timestamp DATETIME
+                    timestamp DATETIME,
+                    UNIQUE (fleet_carrier_name, timestamp)
                 ) 
             ''')
             affiliator_conn.commit()
