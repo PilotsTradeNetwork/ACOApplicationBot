@@ -36,7 +36,7 @@ class DatabaseInteraction(Cog):
         self.running_scan = True
         await self._update_db()
         self.running_scan = False
-        print('Automatic database scan completed, next scan in 2 hours')
+        print('Automatic database scan completed, next scan in 24 hours')
 
     @timed_scan.after_loop
     async def timed_scan_after_loop(self):
@@ -166,9 +166,12 @@ class DatabaseInteraction(Cog):
             print(record)
             # Iterate over the records and populate the database as required.
 
-            # Check if it is in the database already
+            # Check if it is in the database already by checking timestamp and carrier ID. This allows multiple
+            # applications
+
             affiliator_db.execute(
-                "SELECT * FROM acoapplications WHERE fleet_carrier_id LIKE (?)", (f'%{record["Carrier ID"].upper()}%',)
+                "SELECT * FROM acoapplications WHERE fleet_carrier_id LIKE (?) AND timestamp = (?)",
+                (f'%{record["Carrier ID"].upper()}%', f'{record["Timestamp"]}')
             )
             userdata = [UserData(user) for user in affiliator_db.fetchall()]
             if len(userdata) > 1:
@@ -233,8 +236,8 @@ class DatabaseInteraction(Cog):
                             else:
                                 eligible_from = role_since + timedelta(days=14)
                                 eligible_for_aco = False
-                                reason = f'**Reason:** User member for: {time_with_role.days} days. ' \
-                                         f'Eligible from: {eligible_from.strftime("%Y-%m-%d %H:%M:%S")}.\n'
+                                reason = f'**Reason:** User member for: {time_with_role.days} days.\n' \
+                                         f'**Eligible from**: {eligible_from.strftime("%Y-%m-%d %H:%M:%S")}.\n'
                         except TypeError as ex:
                             print('Error when converting the membertracking object to a dict - is the user present?')
                             print(ex)
@@ -242,7 +245,15 @@ class DatabaseInteraction(Cog):
                 except (InvalidUser, NotFound, HTTPException) as ex:
                     print(f'Unable to member status for user {user.discord_username}: {ex}')
                     member = 'Unknown.'
-                    reason = 'Unable to determine membership'
+                    reason = 'Unable to determine membership\n'
+
+                # Allow flagging of multiple attempts to join
+                affiliator_db.execute(
+                    "SELECT * FROM acoapplications WHERE fleet_carrier_id LIKE (?)",
+                    (f'%{record["Carrier ID"].upper()}%',)
+                )
+                # We already stuck it in the DB, so the counter is this current value.
+                application_attempt = len([UserData(user) for user in affiliator_db.fetchall()])
 
                 embed = discord.Embed(
                     title='New ACO application detected.',
@@ -253,7 +264,8 @@ class DatabaseInteraction(Cog):
                                 f'**Has member role:** {member}.\n'
                                 f'**Eligible for ACO:** {eligible_for_aco}\n'
                                 f'{reason}'
-                                f'**Applied At:** {user.timestamp}'
+                                f'**Applied At:** {user.timestamp}\n'
+                                f'**Application Attempt:** {application_attempt}'
                 )
                 embed.set_footer(text='Please validate membership and vote on this proposal')
                 embed_list.append(embed)
