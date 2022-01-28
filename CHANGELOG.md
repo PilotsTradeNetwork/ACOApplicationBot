@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- PR-11 Missing package
+- PR-15 Allow for second applications from users
+
 ## 1.1.0
 
 - PR-2 Remove PirateSteve references
