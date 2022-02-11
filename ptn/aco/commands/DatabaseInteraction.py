@@ -239,9 +239,12 @@ class DatabaseInteraction(Cog):
                                 reason = f'**Reason:** User member for: {time_with_role.days} days.\n' \
                                          f'**Eligible from**: {eligible_from.strftime("%Y-%m-%d %H:%M:%S")}.\n'
                         except TypeError as ex:
+                            reason = f'**Reason:** User not found in Database: {ex}\n'
                             print('Error when converting the membertracking object to a dict - is the user present?')
                             print(ex)
-
+                    else:
+                        print(f'User {dc_user} has no member role: {dc_user.roles}')
+                        reason = '**Reason:** No member role found.\n'
                 except (InvalidUser, NotFound, HTTPException) as ex:
                     print(f'Unable to member status for user {user.discord_username}: {ex}')
                     member = 'Unknown.'
