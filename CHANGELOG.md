@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+ - PR-18 Add logging around member lookup failure
+
 ## 1.2.0
 
 - PR-11 Missing package
