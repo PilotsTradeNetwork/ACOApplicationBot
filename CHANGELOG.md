@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2
+
+- PR-23 PR-23 Dump to the ACO mod channel when it runs and finds nothing, so we know it is still going on
+
 ## 1.2.1
 
  - PR-18 Add logging around member lookup failure

@@ -34,9 +34,19 @@ class DatabaseInteraction(Cog):
     async def timed_scan(self):
         print(f'Automatic database polling started at {datetime.now()}')
         self.running_scan = True
-        await self._update_db()
+        result = await self._update_db()
         self.running_scan = False
         print('Automatic database scan completed, next scan in 24 hours')
+
+        if result['added_count'] == 0:
+            # Nothing happened, lets ping the channel just to show we are still running.
+            notification_channel = bot.get_channel(get_bot_notification_channel())
+
+            # Ok no updates were requested, just drop a message saying it was triggered.
+            message = await notification_channel.send(
+                "No new ACO applications were detected today. Next scan in 24 hours."
+            )
+            await message.add_reaction('👁️')
 
     @timed_scan.after_loop
     async def timed_scan_after_loop(self):
@@ -138,7 +148,6 @@ class DatabaseInteraction(Cog):
         except ValueError as ex:
             return await ctx.send(str(ex))
 
-    @tasks.loop(minutes=3)
     async def _update_db(self):
         """
         Private method to wrap the DB update commands.
