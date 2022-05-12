@@ -15,7 +15,7 @@ from discord.ext.commands import Cog
 
 from ptn.aco.UserData import UserData
 from ptn.aco.constants import bot_guild_id, server_admin_role_id, server_mod_role_id, bot, get_bot_notification_channel, \
-    get_server_aco_role_id
+    get_server_aco_role_id, get_member_role_id
 from ptn.aco.database.database import affiliator_db, affiliator_conn, dump_database, affiliator_lock
 
 
@@ -223,7 +223,7 @@ class DatabaseInteraction(Cog):
 
                     print(f'USER: {dir(dc_user)}')
                     print(type(dc_user))
-                    member_role = discord.utils.find(lambda r: r.name == 'Member', bot_guild.roles)
+                    member_role = discord.utils.get(bot_guild.roles, id=get_member_role_id())
                     print(member_role)
                     member = member_role in dc_user.roles
 
