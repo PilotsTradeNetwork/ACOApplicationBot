@@ -1,8 +1,12 @@
 # Changelog
 
+## 1.2.3
+
+- PR-30 Find a better way to handle finding roles
+
 ## 1.2.2
 
-- PR-23 PR-23 Dump to the ACO mod channel when it runs and finds nothing, so we know it is still going on
+- PR-23 Dump to the ACO mod channel when it runs and finds nothing, so we know it is still going on
 
 ## 1.2.1
 
