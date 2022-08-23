@@ -213,7 +213,7 @@ class DatabaseInteraction(Cog):
                     affiliator_lock.release()
 
                 reason = ""
-                eligible_for_aco = False
+                eligible_for_aco = 'Unknown'
 
                 try:
                     dc_user = bot_guild.get_member_named(user.discord_username)
@@ -248,7 +248,7 @@ class DatabaseInteraction(Cog):
                                 reason = f'**Reason:** User member for: {time_with_role.days} days.\n' \
                                          f'**Eligible from**: {eligible_from.strftime("%Y-%m-%d %H:%M:%S")}.\n'
                         except TypeError as ex:
-                            reason = f'**Reason:** User not found in Database: {ex}\n'
+                            reason = f'**Reason:** User not found in Database.\n'
                             print('Error when converting the membertracking object to a dict - is the user present?')
                             print(ex)
                     else:
