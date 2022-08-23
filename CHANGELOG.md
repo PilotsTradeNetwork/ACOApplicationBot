@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+
+- PR-35 - Update the Member variable when False but unknown
+
 ## 1.2.3
 
 - PR-30 Find a better way to handle finding roles
