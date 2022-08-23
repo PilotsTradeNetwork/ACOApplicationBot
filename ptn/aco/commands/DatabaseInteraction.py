@@ -252,6 +252,7 @@ class DatabaseInteraction(Cog):
                             print('Error when converting the membertracking object to a dict - is the user present?')
                             print(ex)
                     else:
+                        eligible_for_aco = False
                         print(f'User {dc_user} has no member role: {dc_user.roles}')
                         reason = '**Reason:** No member role found.\n'
                 except (InvalidUser, NotFound, HTTPException) as ex:
