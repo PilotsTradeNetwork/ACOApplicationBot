@@ -11,15 +11,15 @@ from dotenv import load_dotenv, find_dotenv
 # because the keys are exposed. DO NOT HOST IN THE REPO. Seriously do not do it ...
 load_dotenv(find_dotenv())
 
-PROD_DISCORD_GUILD = 800080948716503040  # PTN Discord server
+PROD_DISCORD_GUILD = 1081339111111131197  # PTN Discord server
 PROD_DB_PATH = os.path.join(os.path.expanduser('~'), 'acobot', 'aco_applications.db')
 PROD_DB_DUMPS_PATH = os.path.join(os.path.expanduser('~'), 'acobot', 'dumps', 'aco_applications.sql')
-PROD_MOD_ID = 813814494563401780
-PROD_ACO_BOT_CHANNEL = 909365309473951764  # This is #aco-bot
-PROD_ACO_NOTIFICATION_BOT_CHANNEL = 855394490050805770  # This is #mod-aco-applications
-PROD_ADMIN_ID = 800125148971663392
-PROD_MEMBER_ID = 867820916331118622
-PROD_ACO_ROLE_ID = 867811399195426837
+PROD_MOD_ID = 1082235385033273414
+PROD_ACO_BOT_CHANNEL = 1082235723610071050  # This is #aco-bot
+PROD_ACO_NOTIFICATION_BOT_CHANNEL = 1082235661412741150  # This is #mod-aco-applications
+PROD_ADMIN_ID = 1082235384072765461
+PROD_MEMBER_ID = 1082235414192082954
+PROD_ACO_ROLE_ID = 1084672234666332251
 
 # Testing variables
 TEST_DISCORD_GUILD = 818174236480897055  # test Discord server
