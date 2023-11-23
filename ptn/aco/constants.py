@@ -4,7 +4,6 @@ import os
 
 from discord import Intents
 from discord.ext import commands
-from discord_slash import SlashCommand
 from dotenv import load_dotenv, find_dotenv
 
 # Get the discord token from the local .env file. Deliberately not hosted in the repo or Discord takes the bot down
@@ -46,11 +45,6 @@ if not os.path.exists(os.path.dirname(PROD_DB_DUMPS_PATH)):
 
 
 TOKEN = os.getenv('ACO_BOT_DISCORD_TOKEN_PROD') if _production else os.getenv('ACO_BOT_DISCORD_TOKEN_TESTING')
-
-# The bot object:
-bot = commands.Bot(command_prefix='a/', intents=Intents.all())
-slash = SlashCommand(bot, sync_commands=True)
-
 
 def get_db_path():
     """
@@ -140,3 +134,6 @@ def get_server_aco_role_id():
     :rtype: int
     """
     return PROD_ACO_ROLE_ID if _production else TEST_ACO_ROLE_ID
+
+any_elevated_role = [server_mod_role_id(), server_admin_role_id()]
+

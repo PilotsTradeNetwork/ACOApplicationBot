@@ -1,4 +1,7 @@
 # Changelog
+## 1.4.0
+
+- PR-45 Updated bot to utilize Discord.py 2.0 over discord_slash
 
 ## 1.3.0
 
