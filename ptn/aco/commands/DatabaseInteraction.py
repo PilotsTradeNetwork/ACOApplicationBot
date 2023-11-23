@@ -4,19 +4,19 @@ import os.path
 
 import discord
 from dateutil import parser
-from discord import NotFound, HTTPException
+from discord import NotFound, HTTPException, app_commands
 from discord.ext import tasks, commands
-from discord_slash import cog_ext, SlashContext
-from discord_slash.model import SlashCommandPermissionType
-from discord_slash.utils.manage_commands import create_permission, create_option
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 from discord.ext.commands import Cog
 
+from ptn.aco import constants
 from ptn.aco.UserData import UserData
-from ptn.aco.constants import bot_guild_id, server_admin_role_id, server_mod_role_id, bot, get_bot_notification_channel, \
+from ptn.aco.constants import bot_guild_id, server_admin_role_id, server_mod_role_id, get_bot_notification_channel, \
     get_server_aco_role_id, get_member_role_id
 from ptn.aco.database.database import affiliator_db, affiliator_conn, dump_database, affiliator_lock
+from ptn.aco.modules.Helper import check_roles
+from ptn.aco.bot import bot
 
 
 class InvalidUser(Exception):
@@ -94,47 +94,30 @@ class DatabaseInteraction(Cog):
         except gspread.exceptions.APIError as e:
             print(f'Error reading the worksheet: {e}')
 
-    @cog_ext.cog_slash(
-        name='find_user',
-        guild_ids=[bot_guild_id()],
-        description='Debug command to help figure out when we cannot find a users membership details',
-        permissions={
-            bot_guild_id(): [
-                create_permission(server_admin_role_id(), SlashCommandPermissionType.ROLE, True),
-                create_permission(server_mod_role_id(), SlashCommandPermissionType.ROLE, True),
-                create_permission(bot_guild_id(), SlashCommandPermissionType.ROLE, False),
-            ]
-        },
-    )
-    async def find_user_test(self, ctx: SlashContext, member: str):
+    """ Unused?"""
+    # TODO: Flesh out into proper command
+    @app_commands.command(name='find_user')
+    @check_roles(constants.any_elevated_role)
+    async def find_user_test(self, interaction: discord.Interaction, member: str):
         print(f'Looking for: {member}')
         bot_guild = bot.get_guild(bot_guild_id())
         dc_user = bot_guild.get_member_named(member)
         print(f'Result: {dc_user}')
-        return await ctx.send(f'User {dc_user.name} has roles: {dc_user.roles}')
+        return await interaction.user.send_message(f'User {dc_user.name} has roles: {dc_user.roles}')
 
-    @cog_ext.cog_slash(
-        name="scan_aco_applications",
-        guild_ids=[bot_guild_id()],
-        description="Populates the ACO database from the updated google sheet. Admin/Mod role required.",
-        permissions={
-            bot_guild_id(): [
-                create_permission(server_admin_role_id(), SlashCommandPermissionType.ROLE, True),
-                create_permission(server_mod_role_id(), SlashCommandPermissionType.ROLE, True),
-                create_permission(bot_guild_id(), SlashCommandPermissionType.ROLE, False),
-            ]
-        },
-    )
-    async def user_update_database_from_googlesheets(self, ctx: SlashContext):
+    @app_commands.command(name="scan_aco_applications", description="Populates the ACO database from the updated google "
+                                                                    "sheet. Admin/Mod role required.")
+    @check_roles(constants.any_elevated_role)
+    async def user_update_database_from_googlesheets(self, interaction: discord.Interaction):
         """
         Slash command for updating the database from the GoogleSheet.
 
         :returns: A discord embed to the user.
         :rtype: None
         """
-        print(f'User {ctx.author} requested to re-populate the database at {datetime.now()}')
+        print(f'User {interaction.user} requested to re-populate the database at {datetime.now()}')
         if self.running_scan:
-            return await ctx.send('DB scan is already in progress.')
+            return await interaction.response.send_message('DB scan is already in progress.')
 
         try:
             result = await self._update_db()
@@ -143,10 +126,10 @@ class DatabaseInteraction(Cog):
             embed = discord.Embed(title="ACO DB Update ran successfully.")
             embed.add_field(name='Scan completed', value=msg, inline=False)
 
-            return await ctx.send(embed=embed)
+            return await interaction.response.send_message(embed=embed)
 
         except ValueError as ex:
-            return await ctx.send(str(ex))
+            return await interaction.response.send_message(str(ex))
 
     async def _update_db(self):
         """
@@ -311,31 +294,12 @@ class DatabaseInteraction(Cog):
             'added_count': added_count,
         }
 
-    @cog_ext.cog_slash(
-        name='grant_affiliate_status',
-        guild_ids=[bot_guild_id()],
-        description='Toggle user\'s ACO role. Admin/Mod role required.',
-        options=[
-            create_option(
-                name='user',
-                description='An @ mention of the Discord user to receive/remove the role.',
-                option_type=6,  # user
-                required=True
-            )
-        ],
-        permissions={
-            bot_guild_id(): [
-                create_permission(server_admin_role_id(), SlashCommandPermissionType.ROLE, True),
-                create_permission(server_mod_role_id(), SlashCommandPermissionType.ROLE, True),
-                create_permission(bot_guild_id(), SlashCommandPermissionType.ROLE, False),
-            ]
-        },
-    )
-    async def toggle_aco_role(self, ctx: SlashContext, user: discord.Member):
-        print(f"toggle_aco_role called by {ctx.author} in {ctx.channel} for {user}")
+    @app_commands.command(name='grant_affiliate_status', description='Toggle user\'s ACO role. Admin/Mod role required.')
+    async def toggle_aco_role(self, interaction: discord.Interaction, user: discord.Member):
+        print(f"toggle_aco_role called by {interaction.user} in {interaction.channel} for {user}")
         # set the target role
         print(f"ACO role ID is {get_server_aco_role_id()}")
-        role = discord.utils.get(ctx.guild.roles, id=get_server_aco_role_id())
+        role = discord.utils.get(interaction.guild.roles, id=get_server_aco_role_id())
         print(f"ACO role name is {role.name}")
 
         if role in user.roles:
@@ -344,10 +308,10 @@ class DatabaseInteraction(Cog):
             try:
                 await user.remove_roles(role)
                 response = f"{user.display_name} no longer has the ACO role."
-                return await ctx.send(content=response)
+                return await interaction.response.send_message(content=response)
             except Exception as e:
                 print(e)
-                await ctx.send(f"Failed removing role from {user}: {e}")
+                await interaction.response.send_message(f"Failed removing role from {user}: {e}")
         else:
             # toggle on
             print(f"{user} is not an ACO, adding the role.")
@@ -355,7 +319,7 @@ class DatabaseInteraction(Cog):
                 await user.add_roles(role)
                 print(f"Added ACO role to {user}")
                 response = f"{user.display_name} now has the ACO role."
-                return await ctx.send(content=response)
+                return await interaction.response.send_message(content=response)
             except Exception as e:
                 print(e)
-                await ctx.send(f"Failed adding role to {user}: {e}")
+                await interaction.response.send_message(f"Failed adding role to {user}: {e}")
